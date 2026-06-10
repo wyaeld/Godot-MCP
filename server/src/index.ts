@@ -57,20 +57,20 @@ async function main() {
   server.addResource(scriptResource);
   server.addResource(scriptMetadataResource);
 
-  // Try to connect to Godot
-  try {
-    const godot = getGodotConnection();
-    await godot.connect();
+  // Start the server first so the MCP handshake isn't blocked by
+  // Godot connection retries (each attempt waits the full timeout)
+  server.start({
+    transportType: 'stdio',
+  });
+
+  // Try to connect to Godot in the background
+  const godot = getGodotConnection();
+  godot.connect().then(() => {
     console.error('Successfully connected to Godot WebSocket server');
-  } catch (error) {
+  }).catch((error) => {
     const err = error as Error;
     console.warn(`Could not connect to Godot: ${err.message}`);
     console.warn('Will retry connection when commands are executed');
-  }
-
-  // Start the server
-  server.start({
-    transportType: 'stdio',
   });
 
   console.error('Godot MCP server started');
