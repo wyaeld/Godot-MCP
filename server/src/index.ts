@@ -1,19 +1,24 @@
+// File: /server/src/index.ts
 import { FastMCP } from 'fastmcp';
 import { nodeTools } from './tools/node_tools.js';
 import { scriptTools } from './tools/script_tools.js';
 import { sceneTools } from './tools/scene_tools.js';
 import { editorTools } from './tools/editor_tools.js';
+import { assetTools } from './tools/asset_tools.js';
+import { enhancedTools } from './tools/enhanced_tools.js';
+import { scriptResourceTools } from './tools/script_resource_tools.js';
 import { getGodotConnection } from './utils/godot_connection.js';
 
 // Import resources
 import { 
   sceneListResource, 
-  sceneStructureResource 
+  sceneStructureResource,
+  fullSceneTreeResource
 } from './resources/scene_resources.js';
 import { 
   scriptResource, 
   scriptListResource,
-  scriptMetadataResource 
+  scriptMetadataResource
 } from './resources/script_resources.js';
 import { 
   projectStructureResource,
@@ -25,26 +30,38 @@ import {
   selectedNodeResource,
   currentScriptResource 
 } from './resources/editor_resources.js';
+import { assetListResource } from './resources/asset_resources.js';
+import { debugOutputResource } from './resources/debug_resources.js';
 
 /**
  * Main entry point for the Godot MCP server
  */
 async function main() {
-  console.error('Starting Godot MCP server...');
+  console.error('Starting Enhanced Godot MCP server...');
 
   // Create FastMCP instance
   const server = new FastMCP({
-    name: 'GodotMCP',
-    version: '1.0.0',
+    name: 'EnhancedGodotMCP',
+    version: '1.1.0',
   });
 
   // Register all tools
-  [...nodeTools, ...scriptTools, ...sceneTools, ...editorTools].forEach(tool => {
+  const allTools = [
+    ...nodeTools, 
+    ...scriptTools, 
+    ...sceneTools, 
+    ...editorTools,
+    ...assetTools,
+    ...enhancedTools,
+    ...scriptResourceTools
+  ];
+  
+  allTools.forEach(tool => {
     server.addTool(tool);
+    console.error(`Registered tool: ${tool.name}`);
   });
 
   // Register all resources
-  // Static resources
   server.addResource(sceneListResource);
   server.addResource(scriptListResource);
   server.addResource(projectStructureResource);
@@ -56,6 +73,11 @@ async function main() {
   server.addResource(sceneStructureResource);
   server.addResource(scriptResource);
   server.addResource(scriptMetadataResource);
+  server.addResource(fullSceneTreeResource);
+  server.addResource(debugOutputResource);
+  server.addResource(assetListResource);
+
+  console.error('All resources and tools registered');
 
   // Try to connect to Godot
   try {
@@ -73,11 +95,12 @@ async function main() {
     transportType: 'stdio',
   });
 
-  console.error('Godot MCP server started');
+  console.error('Enhanced Godot MCP server started');
+  console.error('Ready to process commands from Claude or other AI assistants');
 
   // Handle cleanup
   const cleanup = () => {
-    console.error('Shutting down Godot MCP server...');
+    console.error('Shutting down Enhanced Godot MCP server...');
     const godot = getGodotConnection();
     godot.disconnect();
     process.exit(0);
@@ -89,6 +112,6 @@ async function main() {
 
 // Start the server
 main().catch(error => {
-  console.error('Failed to start Godot MCP server:', error);
+  console.error('Failed to start Enhanced Godot MCP server:', error);
   process.exit(1);
 });
